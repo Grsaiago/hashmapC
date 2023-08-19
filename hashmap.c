@@ -20,7 +20,7 @@ void  *mallocTable(unsigned int size, int (*compareFunc)(void *), void (*freeFun
   void  *table;
   t_tableMetaData *metadata;
 
-  table = calloc((sizeof(t_tableEntry) * size) + sizeof(t_tableMetaData), 1);
+  table = ft_calloc((sizeof(t_tableEntry) * size) + sizeof(t_tableMetaData), 1);
   if (!table)
     return (NULL);
   metadata = table;
@@ -74,31 +74,69 @@ static unsigned int  hashFunction(char *key)
   return (keyHash);
 }
 
-void  *insertOnTable(t_tableMetaData *table, char *key, void *value)
+void  *tableInsert(t_tableMetaData *table, char *key, void *value)
 {
-  int           i;
-  unsigned int  tableIndex;
+  unsigned int  tableindex;
   unsigned int  keyHash;
-  t_tableEntry  *entryPosition;
+  t_tableEntry  *entryposition;
 
   if (!key)
+  {
+    printf("Invalid insertion of NULL key\n");
     return (NULL);
+  }
+  keyHash = hashFunction(key);
+  tableindex = keyHash % *(unsigned int *)((void *)table - sizeof(t_tableMetaData));
+  entryposition = (t_tableEntry *)table + tableindex;
+  entryposition->keyName = ft_strdup(key, 0);
+  if (!entryposition->keyName)
+    return (NULL);
+  entryposition->keyHash = keyHash;
+  entryposition->value = value;
+  printf("---- insertion of key %s start ----\n", key);
+  printf("keyHash = %d\n", entryposition->keyHash);
+  printf("tableindex: %d\n", tableindex);
+  printf("keyName = %s\n", entryposition->keyName);
+  printf("keyvalue = %s\n", entryposition->value);
+  printf("---- insertion of key %s end ----\n", key);
+  return (&table[tableindex]);
+}
+
+int tableDelete(void *table, char *key)
+{
+  unsigned int  tableIndex;
+  unsigned int  keyHash;
+  t_tableEntry *entryPosition;
+  t_tableMetaData *tableMeta;
+
+  printf("---- Deletion of key %s ----\n", key);
+  if (!key)
+  {
+    printf("Invalid deletion of NULL key\n");
+    printf("---- Deletion of key %s end ----\n", key);
+    return (0);
+  }
   keyHash = hashFunction(key);
   tableIndex = keyHash % *(unsigned int *)((void *)table - sizeof(t_tableMetaData));
   entryPosition = (t_tableEntry *)table + tableIndex;
-  entryPosition->keyName = ft_strdup(key, 0);
-  entryPosition->keyHash = keyHash;
-  entryPosition->value = value;
-  printf("---- Insertion Start ----\n");
-  printf("KeyHash = %d\n", entryPosition->keyHash);
-  printf("tableIndex: %d\n", tableIndex);
-  printf("KeyName = %s\n", entryPosition->keyName);
-  printf("KeyValue = %s\n", entryPosition->value);
-  printf("---- Insertion End ----\n");
-  return (&table[tableIndex]);
+  tableMeta = table - sizeof(t_tableMetaData);
+  if (!entryPosition || entryPosition->keyHash != keyHash)
+  {
+    printf("Key %s doesn't exist on table\n", key);
+    printf("---- Deletion of key %s end ----\n", key);
+    return (0);
+
+  }
+  if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
+    tableMeta->freeFunction(entryPosition->value);
+  // else colisão
+  printf("Deletion happened with the following parameters:\nKey passed: %s\nKey Deleted: %s\n", key, entryPosition->keyName);
+  ft_bzero(entryPosition, sizeof(t_tableEntry));
+  printf("---- Deletion of key %s end ----\n", key);
+  return (0);
 }
 
-void  *accessTable(void *table, char *key)
+void  *tableAcess(void *table, char *key)
 {
   unsigned int  keyHash;
   unsigned int  tableIndex;
@@ -127,17 +165,19 @@ int main(void)
 
   if (!table)
     return (0);
-  insertOnTable(table, "prop0", content);
+  tableInsert(table, "prop0", content);
   content = ft_strdup("string 1", 0);
-  insertOnTable(table, "prop1", content);
+  tableInsert(table, "prop1", content);
   content = ft_strdup("string 2", 0);
-  insertOnTable(table, "prop2", content);
-  access = accessTable(table, "prop0");
+  tableInsert(table, "prop2", content);
+  access = tableAcess(table, "prop0");
   printf("Access na prop0: %s\n", access);
-  access = accessTable(table, "prop1");
+  access = tableAcess(table, "prop1");
   printf("Access na prop1: %s\n", access);
-  access = accessTable(table, "prop2");
+  access = tableAcess(table, "prop2");
   printf("Access na prop2: %s\n", access);
+  tableDelete(table, "prop0");
+  tableDelete(table, "prop3");
   freeTable(table);
   return (0);
 }
