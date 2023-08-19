@@ -119,7 +119,6 @@ int tableDelete(void *table, char *key)
   keyHash = hashFunction(key);
   tableIndex = keyHash % *(unsigned int *)((void *)table - sizeof(t_tableMetaData));
   entryPosition = (t_tableEntry *)table + tableIndex;
-  tableMeta = table - sizeof(t_tableMetaData);
   if (!entryPosition || entryPosition->keyHash != keyHash)
   {
     printf("Key %s doesn't exist on table\n", key);
@@ -127,6 +126,7 @@ int tableDelete(void *table, char *key)
     return (0);
 
   }
+  tableMeta = table - sizeof(t_tableMetaData);
   if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
     tableMeta->freeFunction(entryPosition->value);
   // else colisão
@@ -160,16 +160,13 @@ int testF(void *ptr)
 int main(void)
 {
   void  *table = mallocTable(10, testF, free);
-  void  *content = ft_strdup("string 0", 0);
   char  *access;
 
   if (!table)
     return (0);
-  tableInsert(table, "prop0", content);
-  content = ft_strdup("string 1", 0);
-  tableInsert(table, "prop1", content);
-  content = ft_strdup("string 2", 0);
-  tableInsert(table, "prop2", content);
+  tableInsert(table, "prop0", "string 0");
+  tableInsert(table, "prop1", "string 1");
+  tableInsert(table, "prop2", "string 2");
   access = tableAcess(table, "prop0");
   printf("Access na prop0: %s\n", access);
   access = tableAcess(table, "prop1");
