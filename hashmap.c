@@ -127,10 +127,13 @@ int tableDelete(void *table, char *key)
 
   }
   tableMeta = table - sizeof(t_tableMetaData);
-  if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
-    tableMeta->freeFunction(entryPosition->value);
-  // else colisão
   printf("Deletion happened with the following parameters:\nKey passed: %s\nKey Deleted: %s\n", key, entryPosition->keyName);
+  if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
+  {
+    free(entryPosition->keyName);
+    tableMeta->freeFunction(entryPosition->value);
+  }
+  // else colisão
   ft_bzero(entryPosition, sizeof(t_tableEntry));
   printf("---- Deletion of key %s end ----\n", key);
   return (0);
@@ -164,9 +167,7 @@ int main(void)
 
   if (!table)
     return (0);
-  tableInsert(table, "prop0", "string 0");
-  tableInsert(table, "prop1", "string 1");
-  tableInsert(table, "prop2", "string 2");
+  tableInsert(table, "prop0", ft_strdup("string 0", 0));
   access = tableAcess(table, "prop0");
   printf("Access na prop0: %s\n", access);
   access = tableAcess(table, "prop1");
@@ -174,6 +175,8 @@ int main(void)
   access = tableAcess(table, "prop2");
   printf("Access na prop2: %s\n", access);
   tableDelete(table, "prop0");
+  tableDelete(table, "prop1");
+  tableDelete(table, NULL);
   tableDelete(table, "prop3");
   freeTable(table);
   return (0);
