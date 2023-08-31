@@ -31,7 +31,7 @@ void  *mallocTable(unsigned int size, void (*freeFunc)(void *))
     return (NULL);
   metadata = table;
   *metadata = (t_tableMetaData){
-    .tableSize = size, 
+    .tableCapacity = size, 
     .freeFunction = freeFunc
   };
   return (table);
@@ -46,7 +46,7 @@ void  freeTable(void *table)
     return ;
   contentRef = (t_tableEntry *)(table + sizeof(t_tableMetaData));
   index = 0;
-  while (index < ((t_tableMetaData *)table)->tableSize)
+  while (index < ((t_tableMetaData *)table)->tableCapacity)
   {
     if (contentRef[index].value)
     {
@@ -80,18 +80,21 @@ void  *tableInsert(void *table, char *key, void *value)
   unsigned int  tableindex;
   unsigned int  keyHash;
   t_tableEntry  *entryPosition;
+  char			newEntry;
 
   if (!key)
     return (NULL);
   if (tableAccess(table, key))
 	tableDelete(table, key);
   keyHash = hashFunction(key);
-  tableindex = keyHash % ((t_tableMetaData *)table)->tableSize;
+  tableindex = keyHash % ((t_tableMetaData *)table)->tableCapacity;
   entryPosition = (t_tableEntry *)(table + sizeof(t_tableMetaData)) + tableindex;
   entryPosition->keyName = ft_strdup(key, 0);
   if (!entryPosition->keyName)
     return (NULL);
   entryPosition->value = value;
+  ((t_tableMetaData *)table)->tableSize++;
+  printf("tableSize no insert %d\n", ((t_tableMetaData *)table)->tableSize);
   return (entryPosition);
 }
 
@@ -100,14 +103,13 @@ int tableDelete(void *table, char *key)
   unsigned int		tableIndex;
   unsigned int		keyHash;
   t_tableEntry		*entryPosition;
-  t_tableMetaData	*tableMeta;
 
   if (!key)
     return (0);
   keyHash = hashFunction(key);
-  tableIndex = keyHash % ((t_tableMetaData *)table)->tableSize;
+  tableIndex = keyHash % ((t_tableMetaData *)table)->tableCapacity;
   entryPosition = (t_tableEntry *)(table + sizeof(t_tableMetaData)) + tableIndex;
-  if (!entryPosition)
+  if (entryPosition->value == NULL)
     return (0);
   if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
   {
@@ -116,6 +118,8 @@ int tableDelete(void *table, char *key)
   }
   // else colisão
   ft_bzero(entryPosition, sizeof(t_tableEntry));
+  ((t_tableMetaData *)table)->tableSize--;
+  printf("tableSize no delete %d\n", ((t_tableMetaData *)table)->tableSize);
   return (0);
 }
 
@@ -128,7 +132,7 @@ void  *tableAccess(void *table, char *key)
   if (!key)
     return (NULL);
   keyHash = hashFunction(key);
-  tableIndex = keyHash % ((t_tableMetaData *)table)->tableSize;
+  tableIndex = keyHash % ((t_tableMetaData *)table)->tableCapacity;
   entryPosition = (t_tableEntry *)(table + sizeof(t_tableMetaData)) + tableIndex;
   if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
     return (entryPosition->value);
@@ -146,6 +150,9 @@ int main(void)
   tableInsert(table, "prop0", ft_strdup("string 0", 0));
   printf("Access na prop0: %s\n", (char *)tableAccess(table, "prop0"));
   tableInsert(table, "prop0", ft_strdup("string 0 sobrescrevendo", 0));
+  tableDelete(table, "prop1");
+  tableDelete(table, "prop1");
+  tableDelete(table, "prop1");
   printf("Access na prop0: %s\n", (char *)tableAccess(table, "prop0"));
   printf("Access na prop1: %s\n", (char *)tableAccess(table, "prop1"));
   printf("Access na prop2: %s\n", (char *)tableAccess(table, "prop2"));
