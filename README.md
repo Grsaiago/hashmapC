@@ -37,7 +37,7 @@ int main(void) {
 - Enhance the hashing algorithm
 ## Documentation
 
-#### void    \*mallocTable(unsigned int size, void (*freeFunc)(void *))
+### void    \*mallocTable(unsigned int size, void (*freeFunc)(void *))
 Description: Creates an instance of the hashTable with initial *size* initial ammount of buckets.
 
 Parameters:
@@ -47,13 +47,16 @@ Parameters:
 Return: A hash table instance.
 
 
-#### void    freeTable(void *table)
+### void    freeTable(void *table)
 Description: Frees the *table* instance and calls the *freeFunc* on every existing bucket.
 
 Parameters:
 * table: The hash table to be freed.
 
-#### void    *tableInsert(void *table, char *key, void *value)
+* Return: n/a
+
+
+### void    *tableInsert(void *table, char *key, void *value)
 Description: Inserts in the given *table* the value *value* with *key* as the access key to said value.
 
 Parameters:
@@ -64,7 +67,7 @@ Parameters:
 Return: n/a
 
 
-#### int     tableDelete(void *table, char *key)
+### int     tableDelete(void *table, char *key)
 Description: Calls the freeFunc on the value assotiated with *key*.
 
 Parameters:
@@ -75,7 +78,7 @@ Return:
 0 if the value existed before being deleted, 1 otherwise.
 
 
-#### void    *tableAccess(void *table, char *key)
+### void    *tableAccess(void *table, char *key)
 Description: Retrieves from *table* the value associated with *key* - if so exists.
 
 Parameters:
