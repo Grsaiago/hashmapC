@@ -48,7 +48,7 @@ Return: A hash table instance.
 
 
 ### void    free_table(struct s_hash_table *table)
-Description: Frees the *table* instance and calls the *freeFunc* on every existing bucket.
+Description: Frees the *table* instance and calls the *free_func* on every existing bucket.
 
 Parameters:
 * table: The hash table to be freed.
