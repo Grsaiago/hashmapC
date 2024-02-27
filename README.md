@@ -38,7 +38,7 @@ int main(void) {
 ## Documentation
 
 ### struct s_hash_table    \*malloc_table(unsigned int size, void (*free_func)(void *))
-Description: Creates an instance of the hashTable with initial *size* initial ammount of buckets.
+Description: Creates an instance of the hashTable with initial *size* ammount of buckets.
 
 Parameters:
 * size: The initial size of the hash table.
