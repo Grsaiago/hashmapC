@@ -1,64 +1,73 @@
 #include <stdio.h>
-#include "./libft/libft.h"
+#include <string.h>
+#include <stdlib.h>
 
-typedef struct s_tableMetaData
-{
-  unsigned int  tableSize;
-  unsigned int	tableCapacity;
-  void          (*freeFunction)(void *);
-} t_tableMetaData;
+/*
+* make the insert and remove table pointer into pointer pointer,
+* so that when the table is modified by realloc, it modifies the
+* main pointer.
+*/
 
-typedef struct s_tableEntry
+typedef struct s_table_entry
 {
-  char          *keyName;
+  char          *key;
   void          *value;
-} t_tableEntry;
+} t_table_entry;
 
-void	*mallocTable(unsigned int size, void (*freeFunc)(void *));
-void	freeTable(void *table);
-static unsigned int		hashFunction(char *key);
-void	*tableInsert(void *table, char *key, void *value);
-int		tableDelete(void *table, char *key);
-void  	*tableAccess(void *table, char *key);
-
-void  *mallocTable(unsigned int size, void (*freeFunc)(void *))
+typedef struct s_hash_table
 {
-  void  *table;
-  t_tableMetaData *metadata;
+  unsigned int	      size;
+  unsigned int	      capacity;
+  void		      (*free_func)(void *);
+  struct s_table_entry *entries;
+} t_hash_table;
 
-  table = ft_calloc((sizeof(t_tableEntry) * size) + sizeof(t_tableMetaData), 1);
+struct s_hash_table    *malloc_table(unsigned int size, void (*free_func)(void *));
+void		      free_table(struct s_hash_table *table);
+void		      *table_insert(struct s_hash_table *table, char *key, void *value);
+void		      *table_access(struct s_hash_table *table, char *key);
+int		      table_remove(struct s_hash_table *table, char *key);
+static unsigned int   hash_function(char *key);
+
+struct s_hash_table    *malloc_table(unsigned int size, void (*free_func)(void *))
+{
+  struct s_hash_table  *table;
+
+  if (size == 0)
+    return (NULL);
+  table = malloc(sizeof(struct s_hash_table));
   if (!table)
     return (NULL);
-  metadata = table;
-  *metadata = (t_tableMetaData){
-    .tableCapacity = size, 
-    .freeFunction = freeFunc
+  *table = (t_hash_table) {
+    .size = 0,
+    .capacity = size, 
+    .free_func = free_func,
+    .entries = calloc(size + 1, sizeof(struct s_table_entry))
   };
+  if (table->entries== NULL) {
+    free(table);
+    return (NULL);
+  }
   return (table);
 }
 
-void  freeTable(void *table)
+void  free_table(struct s_hash_table *table)
 {
-  t_tableEntry    *contentRef;
-  unsigned int    index;
+   unsigned int	index;
 
-  if (!table)
-    return ;
-  contentRef = (t_tableEntry *)(table + sizeof(t_tableMetaData));
   index = 0;
-  while (index < ((t_tableMetaData *)table)->tableCapacity)
+  while (index < table->capacity)
   {
-    if (contentRef[index].value)
-    {
-      ((t_tableMetaData *)table)->freeFunction(contentRef[index].value);
-      free(contentRef[index].keyName);
-    }
+    table->free_func(table->entries[index].value);
+    free(table->entries[index].key);
     index++;
   }
+  free(table->entries);
   free(table);
+  return ;
 }
 
-static unsigned int  hashFunction(char *key)
+static unsigned int  hash_function(char *key)
 {
   unsigned int  i;
   unsigned int keyHash;
@@ -75,87 +84,88 @@ static unsigned int  hashFunction(char *key)
   return (keyHash);
 }
 
-void  *tableInsert(void *table, char *key, void *value)
+void  *table_insert(struct s_hash_table *table, char *key, void *value)
 {
-  unsigned int  tableindex;
-  unsigned int  keyHash;
-  t_tableEntry  *entryPosition;
-  char			newEntry;
+  unsigned int	      index;
+  unsigned int	      key_hash;
+  struct s_table_entry *entry_position;
 
-  if (!key)
+  if (!key || strcmp("", key) == 0)
     return (NULL);
-  if (tableAccess(table, key))
-	tableDelete(table, key);
-  keyHash = hashFunction(key);
-  tableindex = keyHash % ((t_tableMetaData *)table)->tableCapacity;
-  entryPosition = (t_tableEntry *)(table + sizeof(t_tableMetaData)) + tableindex;
-  entryPosition->keyName = ft_strdup(key, 0);
-  if (!entryPosition->keyName)
+  if (table_access(table, key))
+	table_remove(table, key);
+  key_hash = hash_function(key);
+  index = key_hash % table->capacity;
+  entry_position = &table->entries[index];
+  entry_position->key = strdup(key);
+  if (!entry_position->key) {
+    free_table(table);
     return (NULL);
-  entryPosition->value = value;
-  ((t_tableMetaData *)table)->tableSize++;
-  printf("tableSize no insert %d\n", ((t_tableMetaData *)table)->tableSize);
-  return (entryPosition);
+  }
+  entry_position->value = value;
+  table->size++;
+  printf("table size no insert %d\n", table->size);
+  return (value);
 }
 
-int tableDelete(void *table, char *key)
+int   table_remove(struct s_hash_table *table, char *key)
 {
-  unsigned int		tableIndex;
-  unsigned int		keyHash;
-  t_tableEntry		*entryPosition;
+  unsigned int		index;
+  unsigned int		key_hash;
+  struct s_table_entry	*entry_position;
 
   if (!key)
     return (0);
-  keyHash = hashFunction(key);
-  tableIndex = keyHash % ((t_tableMetaData *)table)->tableCapacity;
-  entryPosition = (t_tableEntry *)(table + sizeof(t_tableMetaData)) + tableIndex;
-  if (entryPosition->value == NULL)
+  key_hash = hash_function(key);
+  index = key_hash % table->capacity;
+  entry_position = &table->entries[index];
+  if (entry_position->key == NULL)
     return (0);
-  if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
+  if (strcmp(key, entry_position->key) == 0)
   {
-    free(entryPosition->keyName);
-    ((t_tableMetaData *)table)->freeFunction(entryPosition->value);
+    free(entry_position->key);
+    table->free_func(entry_position->value);
   }
   // else colisão
-  ft_bzero(entryPosition, sizeof(t_tableEntry));
-  ((t_tableMetaData *)table)->tableSize--;
-  printf("tableSize no delete %d\n", ((t_tableMetaData *)table)->tableSize);
+  bzero(entry_position, sizeof(struct s_table_entry));
+  table->size--;
+  printf("tableSize no delete %d\n", table->size);
   return (0);
 }
 
-void  *tableAccess(void *table, char *key)
+void  *table_access(struct s_hash_table *table, char *key)
 {
-  unsigned int  keyHash;
-  unsigned int  tableIndex;
-  t_tableEntry *entryPosition;
+  unsigned int		index;
+  unsigned int		key_hash;
+  struct s_table_entry	*entry_position;
 
   if (!key)
     return (NULL);
-  keyHash = hashFunction(key);
-  tableIndex = keyHash % ((t_tableMetaData *)table)->tableCapacity;
-  entryPosition = (t_tableEntry *)(table + sizeof(t_tableMetaData)) + tableIndex;
-  if (ft_strncmp(key, entryPosition->keyName, ft_strlen(entryPosition->keyName)) == 0)
-    return (entryPosition->value);
+  key_hash = hash_function(key);
+  index = key_hash % table->capacity;
+  entry_position = &table->entries[index];
+  if (entry_position->key && strcmp(key, entry_position->key) == 0)
+    return (entry_position->value);
   else 
     return (NULL);
 }
 
 int main(void)
 {
-  void  *table = mallocTable(10, free);
-  char  *access;
+  struct s_hash_table  *table = malloc_table(10, free);
+  char		      *access;
 
   if (!table)
     return (0);
-  tableInsert(table, "prop0", ft_strdup("string 0", 0));
-  printf("Access na prop0: %s\n", (char *)tableAccess(table, "prop0"));
-  tableInsert(table, "prop0", ft_strdup("string 0 sobrescrevendo", 0));
-  tableDelete(table, "prop1");
-  tableDelete(table, "prop1");
-  tableDelete(table, "prop1");
-  printf("Access na prop0: %s\n", (char *)tableAccess(table, "prop0"));
-  printf("Access na prop1: %s\n", (char *)tableAccess(table, "prop1"));
-  printf("Access na prop2: %s\n", (char *)tableAccess(table, "prop2"));
-  freeTable(table);
+  table_insert(table, "prop0", strdup("string 0"));
+  printf("Access na prop0: %s\n", (char *)table_access(table, "prop0"));
+  table_insert(table, "prop0", strdup("Agora sobreescreveu"));
+  table_remove(table, "prop1");
+  table_remove(table, "prop2");
+  table_remove(table, "prop3");
+  printf("Access na prop0: %s\n", (char *)table_access(table, "prop0"));
+  printf("Access na prop1: %s\n", (char *)table_access(table, "prop1"));
+  printf("Access na prop2: %s\n", (char *)table_access(table, "prop2"));
+  free_table(table);
   return (0);
 }

@@ -1,7 +1,7 @@
 NAME = hashmap
 
-SRCS = *.c\
-			 $(wildcard libft/*.c)\
+SRCS =	$(wildcard *.c) \
+
 
 CC = gcc
 
@@ -14,3 +14,5 @@ clean:
 	rm -f $(NAME)
 
 re: clean all
+
+.PHONY: all clean re
