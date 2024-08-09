@@ -1,8 +1,6 @@
 
 # C Hash Table
-
-This is my implementation of a hashmap in C
-
+A ✨Pure C✨ hashmap implementation
 
 ## Installation
 Although this project wasn't made to be used, if you want to, you just have to clone this repo and copy the only file into your project src folder
