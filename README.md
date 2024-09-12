@@ -1,8 +1,6 @@
 
 # C Hash Table
-
-This is my implementation of a hashmap in C
-
+A ✨Pure C✨ hashmap implementation
 
 ## Installation
 Although this project wasn't made to be used, if you want to, you just have to clone this repo and copy the only file into your project src folder
@@ -15,15 +13,14 @@ cp hashmap.c <path to your C source files>
 
 ```c
 int main(void) {
-    void    *table;
-    void    *str;
+    struct s_hash_table    *table;
+    void                    *str;
 
-    table = mallocTable(10);
-    str = ft_strdup("example_value");
-    tableInsert(table, "example_key", str);
-    printf("%s\n", (char *)tableAccess(table, "key"));
-
-    freeTable(table);
+    table = malloc_table(10); // First you have to allocate the hash table.
+    str = strdup("example_value");  // creating a sample value.
+    table_insert(table, "example_key", str); // inserting is easy as passing the key and a pointer to the value.
+    printf("%s\n", (char *)table_access(table, "key")); // accessing is as easy as passing the key you want to access.
+    freeTable(table); // don't forget to free the requested memory, just as in malloc/free api ;)
 }
 ```
 
@@ -34,21 +31,22 @@ int main(void) {
 
 - Make the internal array into a vector to allow dynamic growth of size.
 
-- Enhance the hashing algorithm
+- Implement a decent hashing algorithm
+
 ## Documentation
 
-### void    \*mallocTable(unsigned int size, void (*freeFunc)(void *))
-Description: Creates an instance of the hashTable with initial *size* initial ammount of buckets.
+### struct s_hash_table    \*malloc_table(unsigned int size, void (*free_func)(void *))
+Description: Creates an instance of the hashTable with initial *size* ammount of buckets.
 
 Parameters:
 * size: The initial size of the hash table.
-* freeFunc: A pointer to a function that frees the data structure you're going to store as the value in the table. This is used in the table destruction, to ensure that there is no data leaks.
+* free_func: A pointer to a function that frees the data structure you're going to store as the value in the table. This is used in the table destruction, to ensure that there is no data leaks.
 
 Return: A hash table instance.
 
 
-### void    freeTable(void *table)
-Description: Frees the *table* instance and calls the *freeFunc* on every existing bucket.
+### void    free_table(struct s_hash_table *table)
+Description: Frees the *table* instance and calls the *free_func* on every existing bucket.
 
 Parameters:
 * table: The hash table to be freed.
@@ -56,7 +54,7 @@ Parameters:
 * Return: n/a
 
 
-### void    *tableInsert(void *table, char *key, void *value)
+### struct void    *tableInsert(struct s_hash_table *table, char *key, void *value)
 Description: Inserts in the given *table* the value *value* with *key* as the access key to said value.
 
 Parameters:
@@ -64,11 +62,11 @@ Parameters:
 - key: A string that will become the key of the new bucket.
 - value: The new value to be associated with the key and inserted in the bucket.
 
-Return: n/a
+Return: the inserted value
 
 
-### int     tableDelete(void *table, char *key)
-Description: Calls the freeFunc on the value assotiated with *key*.
+### int     table_remove(void *table, char *key)
+Description: Calls the free_func on the value assotiated with *key*, and delete said *key*.
 
 Parameters:
 - table: The hash table to be operated on.
@@ -78,7 +76,7 @@ Return:
 0 if the value existed before being deleted, 1 otherwise.
 
 
-### void    *tableAccess(void *table, char *key)
+### void    *table_access(struct s_hash_table *table, char *key)
 Description: Retrieves from *table* the value associated with *key* - if so exists.
 
 Parameters:
